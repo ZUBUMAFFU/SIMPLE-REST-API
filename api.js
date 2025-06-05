@@ -1,16 +1,18 @@
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
-const cors = require('cors')
-const {body, validationResult} = require('express-validator')
+const cors = require('cors');
+const { body, validationResult } = require('express-validator');
+require('dotenv').config();
+
 const app = express();
-app.use(bodyParser.json({ limit: '1mb' })); // permite receber JSON no corpo da requisição
-app.use(cors())
+app.use(bodyParser.json({ limit: '1mb' }));
+app.use(cors());
 
 // Conexão com banco
-require('dotenv').config();
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT, // PORTA IMPORTANTE!
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME
@@ -51,9 +53,10 @@ app.post('/produtos',
       if (err) return res.status(500).json({ error: err });
       res.status(201).json({ id: result.insertId, nome, preco, quantidade });
     });
-});
+  }
+);
 
-// PUT - Atualizar produto por ID
+// PUT - Atualizar produto
 app.put('/produtos/:id',
   [
     body('nome').notEmpty().withMessage('Nome é obrigatório'),
@@ -74,9 +77,10 @@ app.put('/produtos/:id',
       if (result.affectedRows === 0) return res.status(404).json({ message: 'Produto não encontrado' });
       res.json({ message: 'Produto atualizado com sucesso' });
     });
-});
+  }
+);
 
-// DELETE - Remover produto por ID :)
+// DELETE - Remover produto
 app.delete('/produtos/:id', (req, res) => {
   const { id } = req.params;
   const sql = 'DELETE FROM produtos WHERE id = ?';
@@ -87,13 +91,14 @@ app.delete('/produtos/:id', (req, res) => {
   });
 });
 
+// Tratamento global de erros
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
 // Iniciar servidor
-app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
-//code maked by jp
